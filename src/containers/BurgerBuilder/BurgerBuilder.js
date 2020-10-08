@@ -1,11 +1,12 @@
 import React, { Component } from "react";
-
+import {connect} from 'react-redux';
 import Aux from "../../hoc/Auxiliary";
 import Burger from "../../components/Burger/Burger";
 import BuildControls from "../../components/Burger/BuildControls/BuildControls";
 import Modal from "../../components/UI/Modal/Modal";
 import OrderSummary from "../../components/Burger/OrderSummary/OrderSummary";
 import Spinner from "../../components/UI/Spinner/Spinner";
+import * as actionType from '../../Store/actions';
 
 const INGREDIENT_PRICES = {
   salad: 0.5,
@@ -16,12 +17,6 @@ const INGREDIENT_PRICES = {
 
 class BurgerBuilder extends Component {
   state = {
-    ingredients: {
-      salad: 0,
-      bacon: 0,
-      cheese: 0,
-      meat: 0,
-    },
     totalPrice: 0,
     purchasable: false,
     purchasing: false,
@@ -97,14 +92,14 @@ class BurgerBuilder extends Component {
 
   render() {
     const disabledInfo = {
-      ...this.state.ingredients,
+      ...this.props.ingredients,
     };
     for (let key in disabledInfo) {
       disabledInfo[key] = disabledInfo[key] <= 0;
     }
     let orderSummary = (
       <OrderSummary
-        ingredients={this.state.ingredients}
+        ingredients={this.props.ingredients}
         price={this.state.totalPrice}
         purchaseCancelled={this.purchaseCancelHandler}
         purchaseContinued={this.purchaseContinueHandler}
@@ -121,10 +116,10 @@ class BurgerBuilder extends Component {
         >
           {orderSummary}
         </Modal>
-        <Burger ingredients={this.state.ingredients} />
+        <Burger ingredients={this.props.ingredients} />
         <BuildControls
-          ingredientAdded={this.addIngredientHandler}
-          ingredientRemoved={this.removeIngredientHandler}
+          ingredientAdded={this.props.onIngredientAdded}
+          ingredientRemoved={this.props.onIngredientRemoved}
           disabled={disabledInfo}
           purchasable={this.state.purchasable}
           ordered={this.purchaseHandler}
@@ -134,5 +129,20 @@ class BurgerBuilder extends Component {
     );
   }
 }
+// 
 
-export default BurgerBuilder;
+const mapStateToProps=(state)=>{
+  return {
+    ingredients:state.ingredients
+  }
+}
+
+const mapDispatchToProps=(dispatch)=>{
+  return{
+    onIngredientAdded:(ingName)=>dispatch({type: actionType.ADD_INGREDIENTS, ingredientName:ingName}),
+    onIngredientRemoved:(ingName)=>dispatch({type: actionType.REMOVE_INGREDIENTS, ingredientName:ingName})
+  }
+}
+
+
+export default connect(mapStateToProps, mapDispatchToProps)(BurgerBuilder);
