@@ -1,34 +1,45 @@
-import React, { Component } from 'react';
-import axios from '../../hoc/Order';
-import SingleOrder from './SingleOrder'
+import React, { Component } from "react";
+import { connect } from "react-redux";
+import SingleOrder from "./SingleOrder";
+import Spinner from "../UI/Spinner/Spinner";
+import * as orderActions from "../../Store/actions/order";
 
 class Orders extends Component {
-    state={
-        orders:[],
-        loading:true,
+  componentDidMount() {
+    this.props.onFetchOrders(this.props.token, this.props.userId);
+  }
+  render() {
+    let orders = <Spinner />;
+    if (!this.props.loading) {
+      orders = this.props.orders.map((order) => ( 
+        <SingleOrder
+          key={order.id}
+          ingredients={order.ingredients}
+          price={order.price}
+        />
+      ));
     }
-    componentDidMount(){
-            axios.get('/orders.json').then(response=>{
-                const fetchOrders=[];
-                for(let key in response.data){
-                    fetchOrders.push({...response.data[key], id:key});   //Putiing the object data into array with keys as an id.
-                    this.setState({loading:false, orders:fetchOrders});
-                }
-            }).catch(error=>{
-                this.setState({loading:false});
-            })
-    }
-    render() {
-        return (
-            <div>
-                {this.state.orders.map(order=>(
-                    <SingleOrder key={order.id} 
-                    ingredients={order.ingredients}
-                    price={order.price}    />
-                ))}
-            </div>
-        );
-    }
+    return (
+    <div>
+        {orders}
+    </div>
+    );
+  }
 }
 
-export default Orders;
+const mapStateToProps = (state) => {
+  return {
+    orders: state.order.orders,
+    loading: state.order.loading,
+    token:state.auth.token,
+    userId:state.auth.userId 
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    onFetchOrders: (token, userId) => dispatch(orderActions.fetchOrders(token, userId)),
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Orders);
